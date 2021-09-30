@@ -28,7 +28,8 @@ class Customer:
     # Submit_order takes a cashier, a stall and an amount as parameters, 
     # it deducts the amount from the customer’s wallet and calls the receive_payment method on the cashier object
     def submit_order(self, cashier, stall, amount): 
-        pass
+        self.wallet -= amount
+        cashier.receive_payment(stall, amount)
 
     # The __str__ method prints the customer's information.    
     def __str__(self):
@@ -61,7 +62,16 @@ class Cashier:
 	# The stall processes the order
 	# Function returns cost of the order, using compute_cost method
     def place_order(self, stall, item, quantity):
+        import random
+        customer_count = 0
+        # cust_count % 10 only equals 0 if its a multple of 10 (every 10th customer)
+        if customer_count % 10 == 0:
+            rand = random.randint(1, 100)
+            # 5% chance that the integers 1 through 5 will be selected from 1 to 100. 
+            if ((rand == 1) or (rand == 2) or (rand == 3) or (rand == 4) or (rand == 5)):
+                Customer.reload_money(10)
         stall.process_order(item, quantity)
+        customer_count += 1
         return stall.compute_cost(quantity) 
     
     # string function.
@@ -71,8 +81,46 @@ class Cashier:
 
 ## Complete the Stall class here following the instructions in HW_4_instructions_rubric
 class Stall:
-    
-    pass
+    def __init__(self, food_name, inventory, cost = 7, earnings = 0):
+        self.food_name = food_name
+        self.inventory = inventory
+        self.cost = cost
+        self.earnings = earnings
+
+    def process_order(self, food_name, quantity):
+        if self.has_item == True:
+            if quantity >= self.inventory[food_name]:
+                self.inventory[food_name] -= quantity
+                self.earnings += (self.cost * quantity)
+        else: 
+            print("I'm Sorry, we cannot fullfill your order.")
+
+    def has_item(self, food_name, quantity):
+        if food_name in self.inventory:
+            if self.inventory[food_name] >= quantity:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def stock_up(self, food_name, quantity):
+        if food_name in self.inventory.keys():
+            self.inventory[food_name] += quantity
+        else:
+            self.inventory[food_name] = quantity
+
+    def compute_cost(self, quantity):
+        total = self.cost * quantity
+        return total
+
+    def __str__(self):
+        temp = str(self.food_name)
+        temp2 = self.inventory.keys()
+        temp3 = str(self.cost)
+        temp4 = str(self.earnings)
+        finale = 'Hello, we are {}. This is the current menu {}. We charge ${}. We have ${} in total'.format(temp, temp2, temp3, temp4)
+        return finale
 
 
 class TestAllMethods(unittest.TestCase):
@@ -103,10 +151,11 @@ class TestAllMethods(unittest.TestCase):
         self.assertEqual(self.c1.name, "West")
         #cashier holds the directory - within the directory there are three stalls
         self.assertEqual(len(self.c1.directory), 3) 
+        
 
 	## Check to see whether constructors work
     def test_truck_constructor(self):
-        self.assertEqual(self.s1.name, "The Grill Queen")
+        self.assertEqual(self.s1.food_name, "The Grill Queen")
         self.assertEqual(self.s1.inventory, {"Burger":40, "Taco":50})
         self.assertEqual(self.s3.earnings, 0)
         self.assertEqual(self.s2.cost, 9)
@@ -129,8 +178,8 @@ class TestAllMethods(unittest.TestCase):
         self.f2.submit_order(self.c1, self.s2, 30)
 
 		# See if money has changed hands
-        self.assertEqual(self.f2.wallet, previous_custormer_wallet - 30)
-        self.assertEqual(self.s2.earnings, previous_earnings_stall + 30)
+        self.assertEqual(self.f2.wallet, previous_custormer_wallet - 30, 150)
+        self.assertEqual(self.s2.earnings, previous_earnings_stall + 30, 30 )
 
 
 	# Check to see that the server can serve from the different stalls
@@ -145,52 +194,85 @@ class TestAllMethods(unittest.TestCase):
 
 	# Test that computed cost works properly.
     def test_compute_cost(self):
-        #what's wrong with the following statements?
-        #can you correct them?
-        self.assertEqual(self.s1.compute_cost(self.s1,5), 51)
-        self.assertEqual(self.s3.compute_cost(self.s3,6), 45)
+        # expected cost should be '50' because s1 had an inventory cost of 10 per item
+        self.assertEqual(self.s1.compute_cost(5), 50)
+        # expected cost should be '42' becuase s3 did not have an inventory cost so default is 7 per item
+        self.assertEqual(self.s3.compute_cost(6), 42)
 
 	# Check that the stall can properly see when it is empty
     def test_has_item(self):
         # Set up to run test cases
-
+        
         # Test to see if has_item returns True when a stall has enough items left
         # Please follow the instructions below to create three different kinds of test cases 
         # Test case 1: the stall does not have this food item: 
-        
+        self.assertEqual(self.s1.has_item('Pizza', 10), False)
         # Test case 2: the stall does not have enough food item: 
-        
+        self.assertEqual(self.s1.has_item('Burger', 60), False)
         # Test case 3: the stall has the food item of the certain quantity: 
-        pass
+        self.assertEqual(self.s1.has_item('Burger', 10), True)
 
 	# Test validate order
     def test_validate_order(self):
 		# case 1: test if a customer doesn't have enough money in their wallet to order
+        self.f1.wallet = 10
+        self.f1.validate_order(self.c1, self.s1, 'Burger', 15)
+        self.assertEqual(self.f1.wallet, 10)
 
 		# case 2: test if the stall doesn't have enough food left in stock
+        self.f1.wallet = 200
+        self.f1.validate_order(self.c1, self.s1, 'Burger', 50)
+        self.assertEqual(self.f1.wallet, 200)
 
 		# case 3: check if the cashier can order item from that stall
-        pass
+        self.f1.wallet = 200
+        self.f1.validate_order(self.c1, self.s1, 'Burger', 2)
+        self.assertEqual(self.f1.wallet, 180)
 
     # Test if a customer can add money to their wallet
     def test_reload_money(self):
-        pass
+        self.f1.wallet = 20
+        self.f1.reload_money(30)
+        self.assertEqual(self.f1.wallet, 50)
     
 ### Write main function
 def main():
-    #Create different objects 
+    # inventories
+    healthy_inventory = {'apple': 8, 'salad': 7, 'carrot': 8}
+    junk_inventory = {'burger': 5, 'fries': 10, 'milkshake': 9}
+
+	# customer : self, name, wallet (default 100)
+    lexi = Customer('Lexi', 150)
+    ryan = Customer('Ryan', 75)
+    aleks = Customer('Aleks')
+
+	# stall : self, name, inventory, cost=7, earnings=0
+    healthy_food = Stall('healthy_food', healthy_inventory, 10, 100)
+    junk_food = Stall('junk_food', junk_inventory, 15, 200)
+
+    # cashier : self, name, directory =[]
+    barb = Cashier('Barb', [healthy_food])
+    eliana = Cashier('Eliana', [junk_food])
+	
 
     #Try all cases in the validate_order function
     #Below you need to have *each customer instance* try the four cases
     #case 1: the cashier does not have the stall 
-    
+    lexi.validate_order(barb, junk_food, 'apple', 3)
+    aleks.validate_order(barb, junk_food, 'apple', 3)
+    ryan.validate_order(barb, junk_food, 'apple', 3)
+
     #case 2: the casher has the stall, but not enough ordered food or the ordered food item
-    
+    aleks.validate_order(barb, healthy_food, 'apple', 10)
+
     #case 3: the customer does not have enough money to pay for the order: 
+    ryan.validate_order(barb, healthy_food, 'apple', 8)
     
     #case 4: the customer successfully places an order
-
-    pass
+    # validate_order : self, cashier, stall, item_name, quantity    
+    lexi.validate_order(barb, healthy_food, 'apple', 3)
+    ryan.validate_order(eliana, junk_food, 'fries', 5)
+    aleks.validate_order(barb, healthy_food, 'carrot', 6)
 
 if __name__ == "__main__":
 	main()
