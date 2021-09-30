@@ -63,16 +63,16 @@ class Cashier:
 	# Function returns cost of the order, using compute_cost method
     def place_order(self, stall, item, quantity):
         import random
-        customer_count = 0
+        customer_number = 0
         # cust_count % 10 only equals 0 if its a multple of 10 (every 10th customer)
-        if customer_count % 10 == 0:
-            rand = random.randint(1, 100)
-            # 5% chance that the integers 1 through 5 will be selected from 1 to 100. 
-            if ((rand == 1) or (rand == 2) or (rand == 3) or (rand == 4) or (rand == 5)):
+        if customer_number % 10 == 0:
+            # 5% chance that the integer 1 will be selected from 1 to 20.
+            cash_money = random.randrange(1, 20)
+            if cash_money == 1:
                 Customer.reload_money(10)
         stall.process_order(item, quantity)
-        customer_count += 1
-        return stall.compute_cost(quantity) 
+        customer_number += 1
+        return stall.compute_cost(quantity)
     
     # string function.
     def __str__(self):
@@ -201,10 +201,6 @@ class TestAllMethods(unittest.TestCase):
 
 	# Check that the stall can properly see when it is empty
     def test_has_item(self):
-        # Set up to run test cases
-        
-        # Test to see if has_item returns True when a stall has enough items left
-        # Please follow the instructions below to create three different kinds of test cases 
         # Test case 1: the stall does not have this food item: 
         self.assertEqual(self.s1.has_item('Pizza', 10), False)
         # Test case 2: the stall does not have enough food item: 
@@ -238,41 +234,41 @@ class TestAllMethods(unittest.TestCase):
 ### Write main function
 def main():
     # inventories
-    healthy_inventory = {'apple': 8, 'salad': 7, 'carrot': 8}
-    junk_inventory = {'burger': 5, 'fries': 10, 'milkshake': 9}
+    gains_inventory = {'apple': 8, 'salad': 7, 'carrot': 8}
+    gamer_fuel_inventory = {'burger': 5, 'fries': 10, 'milkshake': 9}
 
 	# customer : self, name, wallet (default 100)
-    lexi = Customer('Lexi', 150)
-    ryan = Customer('Ryan', 75)
+    ryan = Customer('Ryan', 250)
+    lexi = Customer('Lexi', 175)
     aleks = Customer('Aleks')
 
 	# stall : self, name, inventory, cost=7, earnings=0
-    healthy_food = Stall('healthy_food', healthy_inventory, 10, 100)
-    junk_food = Stall('junk_food', junk_inventory, 15, 200)
+    gains_food = Stall('healthy_food', gains_inventory, 10, 100)
+    gamer_fuel = Stall('junk_food', gamer_fuel_inventory, 15, 200)
 
     # cashier : self, name, directory =[]
-    barb = Cashier('Barb', [healthy_food])
-    eliana = Cashier('Eliana', [junk_food])
+    bob = Cashier('Bob', [gains_food])
+    jeff = Cashier('Jeff', [gamer_fuel])
 	
 
     #Try all cases in the validate_order function
     #Below you need to have *each customer instance* try the four cases
     #case 1: the cashier does not have the stall 
-    lexi.validate_order(barb, junk_food, 'apple', 3)
-    aleks.validate_order(barb, junk_food, 'apple', 3)
-    ryan.validate_order(barb, junk_food, 'apple', 3)
+    lexi.validate_order(bob, gamer_fuel, 'apple', 3)
+    aleks.validate_order(bob, gamer_fuel, 'apple', 3)
+    ryan.validate_order(bob, gamer_fuel, 'apple', 3)
 
     #case 2: the casher has the stall, but not enough ordered food or the ordered food item
-    aleks.validate_order(barb, healthy_food, 'apple', 10)
+    aleks.validate_order(bob, gains_food, 'apple', 10)
 
     #case 3: the customer does not have enough money to pay for the order: 
-    ryan.validate_order(barb, healthy_food, 'apple', 8)
+    ryan.validate_order(bob, gains_food, 'apple', 8)
     
     #case 4: the customer successfully places an order
     # validate_order : self, cashier, stall, item_name, quantity    
-    lexi.validate_order(barb, healthy_food, 'apple', 3)
-    ryan.validate_order(eliana, junk_food, 'fries', 5)
-    aleks.validate_order(barb, healthy_food, 'carrot', 6)
+    lexi.validate_order(bob, gains_food, 'apple', 3)
+    ryan.validate_order(jeff, gamer_fuel, 'fries', 5)
+    aleks.validate_order(bob, gains_food, 'carrot', 6)
 
 if __name__ == "__main__":
 	main()
