@@ -152,7 +152,6 @@ class TestAllMethods(unittest.TestCase):
         #cashier holds the directory - within the directory there are three stalls
         self.assertEqual(len(self.c1.directory), 3) 
         
-
 	## Check to see whether constructors work
     def test_truck_constructor(self):
         self.assertEqual(self.s1.food_name, "The Grill Queen")
@@ -180,7 +179,6 @@ class TestAllMethods(unittest.TestCase):
 		# See if money has changed hands
         self.assertEqual(self.f2.wallet, previous_custormer_wallet - 30, 150)
         self.assertEqual(self.s2.earnings, previous_earnings_stall + 30, 30 )
-
 
 	# Check to see that the server can serve from the different stalls
     def test_adding_and_serving_stall(self):
@@ -250,7 +248,6 @@ def main():
     bob = Cashier('Bob', [gains_food])
     jeff = Cashier('Jeff', [gamer_fuel])
 	
-
     #Try all cases in the validate_order function
     #Below you need to have *each customer instance* try the four cases
     #case 1: the cashier does not have the stall 
